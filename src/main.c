@@ -62,7 +62,7 @@ const PROGMEM uint8_t CODE_S[6]   = { 0xa8, 0 }; // 1010 1
 // interval count normal values:
 // slow/short: 100, slow/long: 500
 // fast/short: 150, fast/long: 750
-#define INTERVAL_COUNT(WPM, I) (WPM) * (I) * 1000ul / 1200
+#define INTERVAL_COUNT(I) (I) * 125
 
 #define OUTPUT(out) OUTPUT_PORT = (OUTPUT_PORT & ~(OUTPUT_ENABLE | OUTPUT_KEY)) | ((out) & (OUTPUT_ENABLE | OUTPUT_KEY))
 
@@ -125,7 +125,7 @@ ISR(TIMER0_COMPA_vect)
 
   if (output & OUTPUT_ENABLE)
   {
-    if (key_ticks--)
+    if (!key_ticks--)
     {
       key_ticks = ticks_per_sign - 1;
 
@@ -206,17 +206,11 @@ void init_uc(void)
     // D5 (PA3) - short/long
     if ( PINA & (1<<3) )
     {
-      if ( PINA & (1<<0) )
-        enable_period = INTERVAL_COUNT(CODE_SPEED_FAST, INTERVAL_SHORT);
-      else
-        enable_period = INTERVAL_COUNT(CODE_SPEED_SLOW, INTERVAL_SHORT);
+      enable_period = INTERVAL_COUNT(INTERVAL_SHORT);
     }
     else
     {
-      if ( PINA & (1<<0) )
-        enable_period = INTERVAL_COUNT(CODE_SPEED_FAST, INTERVAL_LONG);
-      else
-        enable_period = INTERVAL_COUNT(CODE_SPEED_SLOW, INTERVAL_LONG);
+      enable_period = INTERVAL_COUNT(INTERVAL_LONG);
     }
     // D6-D7 (PA2, PA1) number of intervals
     intervals = ((PINA >> 1) & 0x03);
@@ -228,13 +222,13 @@ void init_uc(void)
     // D1-3 (PA7, PA6, PA5) code
   switch ( ( PINA >> 5 ) & 0x07 )
   {
-    case 1:  memcpy_P(code, (PGM_P)pgm_read_word(&CODE_MOE), 6); intervals = 0; break;
-    case 2:  memcpy_P(code, (PGM_P)pgm_read_word(&CODE_MOI), 6); intervals = 1; break;
-    case 3:  memcpy_P(code, (PGM_P)pgm_read_word(&CODE_MOS), 6); intervals = 2; break;
-    case 4:  memcpy_P(code, (PGM_P)pgm_read_word(&CODE_MOH), 6); intervals = 3; break;
-    case 5:  memcpy_P(code, (PGM_P)pgm_read_word(&CODE_MO5), 6); intervals = 4; break;
-    case 6:  memcpy_P(code, (PGM_P)pgm_read_word(&CODE_S), 6);   intervals = 0; break;
-    default: memcpy_P(code, (PGM_P)pgm_read_word(&CODE_MO), 6);  intervals = 0;
+    case 1:  memcpy_P(code, CODE_MOE, 6); intervals = 0; break;
+    case 2:  memcpy_P(code, CODE_MOI, 6); intervals = 1; break;
+    case 3:  memcpy_P(code, CODE_MOS, 6); intervals = 2; break;
+    case 4:  memcpy_P(code, CODE_MOH, 6); intervals = 3; break;
+    case 5:  memcpy_P(code, CODE_MO5, 6); intervals = 4; break;
+    case 6:  memcpy_P(code, CODE_S, 6);   intervals = 0; break;
+    default: memcpy_P(code, CODE_MO, 6);  intervals = 0;
   }
   if (intervals)
   {
@@ -247,7 +241,8 @@ void init_uc(void)
 
   // D9 (PB0) key level, D10 (PB1) enable level
   output_set = ((PINB & (1 << 0)) << OUTPUT_KEY_PIN) | (((PINB & (1 << 1)) >> 1) << OUTPUT_ENABLE_PIN);
-  OUTPUT(~output_set);
+  output_set ^= OUTPUT_ENABLE | OUTPUT_KEY;
+  OUTPUT(output_set);
   DDRB |= OUTPUT_ENABLE | OUTPUT_KEY;
 
   // setup timer: CTC interrupt at 8ms
