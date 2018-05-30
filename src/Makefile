@@ -15,20 +15,20 @@ export MAKEFLAGS += --silent
 TARGET = AvRDF-kontrol
 
 # mcu type
-MCU = attiny261a
+MCU = attiny461a
 
 # cpu frequency
 F_CPU = 4000000
 
 # programmer type
-ISP = usbasp
+ISP = stk500 #usbasp
 
 # programmer port
-PORT = 
+PORT = -P /dev/ttyACM0
 
 # fuse bits
-LFUSE = 0xEF
-HFUSE = 0xC9
+LFUSE = 0xFE
+HFUSE = 0xDF
 EFUSE = 0xFF
 
 
@@ -60,7 +60,7 @@ ASRC =
 #--------------------------------------------------------------------
 
 # optimization level
-OPT = 3
+OPT = 2
 
 # compile time definitions
 CDEFS = \
@@ -102,9 +102,6 @@ LIBS =
 #--------------------------------------------------------------------
 #  avrdude settings
 #--------------------------------------------------------------------
-
-# erase cycle counter
-AVRDUDE_COUNTER = -y
 
 # other flags
 AVRDUDE_FLAGS = 
@@ -180,12 +177,12 @@ size:
 	fi
 
 install:
-	$(AVRDUDE) -p $(MCU) -c $(ISP) $(addprefix -P ,$(PORT)) $(AVRDUDE_COUNTER) $(AVRDUDE_FLAGS) \
+	$(AVRDUDE) -p t461 -c $(ISP) $(addprefix -P ,$(PORT)) $(AVRDUDE_COUNTER) $(AVRDUDE_FLAGS) \
 		 $(AVRDUDE_FLASH) \
 		 $(AVRDUDE_EEPROM)
 
 fuses:
-	$(AVRDUDE) -p $(MCU) -c $(ISP) $(addprefix -P ,$(PORT)) $(AVRDUDE_COUNTER) -u \
+	$(AVRDUDE) -p t461 -c $(ISP) $(addprefix -P ,$(PORT)) $(AVRDUDE_COUNTER) -u \
 		-U lfuse:w:$(LFUSE):m \
 		-U hfuse:w:$(HFUSE):m \
 		-U efuse:w:$(EFUSE):m
