@@ -21,10 +21,10 @@ MCU = attiny461a
 F_CPU = 4000000
 
 # programmer type
-ISP = stk500 #usbasp
+ISP = usbasp
 
 # programmer port
-PORT = -P /dev/ttyACM0
+PORT = 
 
 # fuse bits
 LFUSE = 0xFE
