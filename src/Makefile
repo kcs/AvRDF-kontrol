@@ -31,6 +31,9 @@ LFUSE = 0xFE
 HFUSE = 0xDF
 EFUSE = 0xFF
 
+# board variant
+BOARD_VARIANT = 1
+
 
 #--------------------------------------------------------------------
 #  Directories
@@ -63,14 +66,14 @@ ASRC =
 OPT = 2
 
 # compile time definitions
-CDEFS = \
+CDEFS = BOARD_VERSION=$(BOARD_VARIANT) \
 
 # include directories
 CINC = \
        $(SRCDIR) \
 
 # warnings
-CWARN = -Wall -Wextra -Werror \
+CWARN = -Wall -Wextra -Werror\
         -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align \
         -Wsign-compare -Waggregate-return -Wstrict-prototypes \
         -Wmissing-prototypes -Wmissing-declarations -Wunused \
@@ -78,9 +81,13 @@ CWARN = -Wall -Wextra -Werror \
 # tuning
 CTUNING = -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 
+# avr-gcc version 13 has bug, that identifies PORTB as an out-of-bounds array
+# access, until this is fixed, a workaround is to specify the page size as 0
+CTUNING += --param min-pagesize=0
+
 # language standard
 # use latest GNU extensions
-CSTD = gnu99
+CSTD = gnu17
 
 # debug info
 DEBUG = dwarf-2
